@@ -4,46 +4,48 @@ import path from 'path'
 
 export async function GET() {
  try {
-   const iconsDir = path.join(process.cwd(), 'public/icons')
-   console.log('Icons directory:', iconsDir)
+   // 改用 src/data/metadata 目录
+   const metadataDir = path.join(process.cwd(), 'src', 'data', 'metadata')
+   console.log('Metadata directory:', metadataDir)
 
-   if (!fs.existsSync(iconsDir)) {
-     console.log('Icons directory does not exist')
+   if (!fs.existsSync(metadataDir)) {
+     console.log('Metadata directory does not exist')
      return NextResponse.json({})
    }
 
    const metadata = {}
-   const categories = fs.readdirSync(iconsDir)
-     .filter(file => fs.statSync(path.join(iconsDir, file)).isDirectory())
+   const files = fs.readdirSync(metadataDir)
+     .filter(file => file.endsWith('.json'))
 
-   console.log('Found categories:', categories)
+   console.log('Found metadata files:', files)
 
-   for (const category of categories) {
-     const metadataPath = path.join(iconsDir, category, 'metadata.json')
-     console.log('Checking metadata path:', metadataPath)
+   for (const file of files) {
+     try {
+       const category = path.basename(file, '.json')
+       const content = fs.readFileSync(path.join(metadataDir, file), 'utf8')
+       console.log(`Raw content for ${category}:`, content)
+       
+       metadata[category] = JSON.parse(content)
+     } catch (error) {
+       console.error(`Error reading metadata file ${file}:`, error)
+     }
+   }
 
-     if (fs.existsSync(metadataPath)) {
-       try {
-         const content = fs.readFileSync(metadataPath, 'utf8')
-         console.log(`Raw content for ${category}:`, content)
-         
-         // 直接使用文件中的内容
-         metadata[category] = JSON.parse(content)
-       } catch (error) {
-         console.error(`Error reading metadata for ${category}:`, error)
-         // 如果读取失败，使用默认值
+   // 读取图标目录以获取没有元数据的分类
+   const iconsDir = path.join(process.cwd(), 'public', 'icons')
+   if (fs.existsSync(iconsDir)) {
+     const categories = fs.readdirSync(iconsDir)
+       .filter(file => fs.statSync(path.join(iconsDir, file)).isDirectory())
+     
+     // 为没有元数据的分类添加默认值
+     categories.forEach(category => {
+       if (!metadata[category]) {
          metadata[category] = {
            categoryName: category,
            icons: {}
          }
        }
-     } else {
-       // 如果文件不存在，使用默认值
-       metadata[category] = {
-         categoryName: category,
-         icons: {}
-       }
-     }
+     })
    }
 
    console.log('Final metadata:', JSON.stringify(metadata, null, 2))
