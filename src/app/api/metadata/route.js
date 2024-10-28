@@ -3,52 +3,62 @@ import fs from 'fs'
 import path from 'path'
 
 export async function GET() {
-  try {
-    const iconsDir = path.join(process.cwd(), 'public/icons')
-    
-    // 确保目录存在
-    if (!fs.existsSync(iconsDir)) {
-      console.log('Icons directory not found');
-      return NextResponse.json({})
-    }
+ try {
+   const iconsDir = path.join(process.cwd(), 'public/icons')
+   console.log('Icons directory:', iconsDir)
 
-    const metadata = {}
-    
-    // 获取所有分类目录
-    const categories = fs.readdirSync(iconsDir)
-      .filter(file => {
-        try {
-          return fs.statSync(path.join(iconsDir, file)).isDirectory()
-        } catch (error) {
-          console.error(`Error checking directory ${file}:`, error)
-          return false
-        }
-      })
-    
-    console.log('Found categories:', categories);
+   if (!fs.existsSync(iconsDir)) {
+     console.log('Icons directory does not exist')
+     return NextResponse.json({})
+   }
 
-    // 读取每个分类的 metadata.json
-    categories.forEach(category => {
-      const metadataPath = path.join(iconsDir, category, 'metadata.json')
-      console.log('Checking metadata path:', metadataPath);
-      
-      if (fs.existsSync(metadataPath)) {
-        try {
-          const data = fs.readFileSync(metadataPath, 'utf8')
-          metadata[category] = JSON.parse(data)
-          console.log(`Loaded metadata for ${category}:`, metadata[category])
-        } catch (error) {
-          console.error(`Error loading metadata for ${category}:`, error)
-        }
-      } else {
-        console.log(`No metadata.json found for ${category}`);
-      }
-    })
+   const metadata = {}
+   const categories = fs.readdirSync(iconsDir)
+     .filter(file => fs.statSync(path.join(iconsDir, file)).isDirectory())
 
-    console.log('Final metadata:', metadata);
-    return NextResponse.json(metadata)
-  } catch (error) {
-    console.error('Error in metadata API:', error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
-  }
+   console.log('Found categories:', categories)
+
+   for (const category of categories) {
+     const metadataPath = path.join(iconsDir, category, 'metadata.json')
+     console.log('Checking metadata path:', metadataPath)
+
+     if (fs.existsSync(metadataPath)) {
+       try {
+         const content = fs.readFileSync(metadataPath, 'utf8')
+         console.log(`Raw content for ${category}:`, content)
+         metadata[category] = JSON.parse(content)
+         console.log(`Parsed metadata for ${category}:`, metadata[category])
+       } catch (error) {
+         console.error(`Error reading metadata for ${category}:`, error)
+         metadata[category] = {
+           categoryName: category,
+           icons: {}
+         }
+       }
+     } else {
+       console.log(`No metadata.json found for ${category}`)
+       metadata[category] = {
+         categoryName: category,
+         icons: {}
+       }
+     }
+   }
+
+   console.log('Final metadata:', metadata)
+   return NextResponse.json(metadata, {
+     headers: {
+       'Content-Type': 'application/json; charset=utf-8',
+       'Cache-Control': 'no-store, must-revalidate',
+     },
+   })
+ } catch (error) {
+   console.error('API error:', error)
+   return NextResponse.json({ error: error.message }, { 
+     status: 500,
+     headers: {
+       'Content-Type': 'application/json; charset=utf-8',
+       'Cache-Control': 'no-store, must-revalidate',
+     },
+   })
+ }
 }

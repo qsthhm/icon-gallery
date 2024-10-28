@@ -17,12 +17,22 @@ export default function Home() {
          fetch('/api/categories'),
          fetch('/api/metadata')
        ]);
-       
+
+       if (!categoriesRes.ok || !metadataRes.ok) {
+         throw new Error('Failed to fetch data');
+       }
+
        const categoriesData = await categoriesRes.json();
        const metadataData = await metadataRes.json();
        
-       console.log('Loaded data:', { categories: categoriesData, metadata: metadataData });
+       console.log('API Response - Categories:', categoriesData);
+       console.log('API Response - Metadata:', metadataData);
        
+       if (metadataData.error) {
+         console.error('Metadata error:', metadataData.error);
+         throw new Error(metadataData.error);
+       }
+
        setCategories(Array.isArray(categoriesData) ? categoriesData : []);
        setMetadata(metadataData || {});
      } catch (error) {
@@ -40,6 +50,9 @@ export default function Home() {
    const loadIcons = async () => {
      try {
        const res = await fetch(`/api/icons${currentCategory === 'all' ? '' : `?category=${currentCategory}`}`);
+       if (!res.ok) {
+         throw new Error('Failed to fetch icons');
+       }
        const data = await res.json();
        console.log('Loaded icons:', data);
        setIcons(Array.isArray(data) ? data : []);
@@ -99,7 +112,6 @@ export default function Home() {
 
      const searchTermLower = searchTerm.toLowerCase();
      
-     // 详细的调试信息
      console.log({
        icon: icon.name,
        category: icon.category,
