@@ -7,32 +7,30 @@ const nextConfig = {
           headers: [
             {
               key: 'Content-Security-Policy',
-              value: [
-                "default-src 'self'",
-                "script-src 'self' 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval'",
-                "style-src 'self' 'unsafe-inline'",
-                "img-src 'self' data: blob:",
-                "font-src 'self'",
-                "object-src 'none'",
-                "base-uri 'self'",
-                "form-action 'self'",
-                "frame-ancestors 'none'",
-                "block-all-mixed-content",
-                "upgrade-insecure-requests"
-              ].join('; ')
+              value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'"
             }
           ],
-        }
+        },
       ]
     },
-    // 添加 SVG 支持
+    reactStrictMode: true,
+    swcMinify: true,
+    images: {
+      domains: ['localhost'],
+      remotePatterns: [
+        {
+          protocol: 'https',
+          hostname: '**',
+        },
+      ],
+    },
     webpack(config) {
       config.module.rules.push({
         test: /\.svg$/,
-        use: ['@svgr/webpack']
-      })
-      return config
-    }
+        use: ['@svgr/webpack'],
+      });
+      return config;
+    },
   }
   
   module.exports = nextConfig

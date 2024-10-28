@@ -5,81 +5,53 @@ export default function Home() {
   const [categories, setCategories] = useState([])
   const [currentCategory, setCurrentCategory] = useState('all')
   const [icons, setIcons] = useState([])
-  const [searchTerm, setSearchTerm] = useState('')
-  const [metadata, setMetadata] = useState({})
-  const [selectedColor, setSelectedColor] = useState('#000000')
 
+  // 获取分类
   useEffect(() => {
-    // 获取分类和元数据
-    Promise.all([
-      fetch('/api/categories').then(res => res.json()),
-      fetch('/api/metadata').then(res => res.json())
-    ]).then(([categoriesData, metadataData]) => {
-      console.log('Loaded metadata:', metadataData)
-      setCategories(categoriesData)
-      setMetadata(metadataData)
-    }).catch(error => {
-      console.error('Failed to load data:', error)
-    })
+    fetch('/api/categories')
+      .then(res => res.json())
+      .then(data => {
+        console.log('Categories:', data)
+        setCategories(Array.isArray(data) ? data : [])
+      })
+      .catch(error => {
+        console.error('Error fetching categories:', error)
+      })
   }, [])
 
+  // 获取图标
   useEffect(() => {
-    // 获取图标
-    fetch(`/api/icons${currentCategory === 'all' ? '' : `?category=${currentCategory}`}`)
+    const url = currentCategory === 'all' 
+      ? '/api/icons'
+      : `/api/icons?category=${currentCategory}`
+    
+    fetch(url)
       .then(res => res.json())
-      .then(iconsData => {
-        console.log('Loaded icons:', iconsData)
-        setIcons(iconsData)
+      .then(data => {
+        console.log('Icons:', data)
+        setIcons(Array.isArray(data) ? data : [])
       })
-      .catch(console.error)
+      .catch(error => {
+        console.error('Error fetching icons:', error)
+      })
   }, [currentCategory])
 
-  const copyIconCode = async (path, color) => {
+  // 复制SVG代码
+  const copyIconCode = async (path) => {
     try {
       const response = await fetch(path)
-      let svg = await response.text()
-      // 如果设置了颜色且不是黑色，替换 SVG 中的填充颜色
-      if (color && color !== '#000000') {
-        svg = svg.replace(/fill="[^"]*"/g, `fill="${color}"`)
-        // 如果没有 fill 属性，添加一个
-        if (!svg.includes('fill=')) {
-          svg = svg.replace('<svg', `<svg fill="${color}"`)
-        }
-      }
+      const svg = await response.text()
       await navigator.clipboard.writeText(svg)
-      alert('复制成功！')
+      alert('已复制到剪贴板')
     } catch (error) {
-      console.error('复制失败:', error)
+      console.error('Error copying icon:', error)
       alert('复制失败')
     }
   }
 
-  const filteredIcons = icons.filter(icon => {
-    if (!searchTerm) return true
-    
-    const categoryMeta = metadata[icon.category] || {}
-    const iconMeta = categoryMeta.icons?.[icon.name.replace('.svg', '')] || {}
-    
-    const searchString = [
-      icon.name,
-      iconMeta.name,
-      iconMeta.description,
-      categoryMeta.categoryName
-    ].filter(Boolean).join(' ').toLowerCase()
-    
-    console.log('Searching:', {
-      icon: icon.name,
-      searchString,
-      searchTerm: searchTerm.toLowerCase(),
-      match: searchString.includes(searchTerm.toLowerCase())
-    })
-    
-    return searchString.includes(searchTerm.toLowerCase())
-  })
-
   return (
     <div className="flex min-h-screen">
-      {/* 侧边栏 */}
+      {/* 左侧分类 */}
       <aside className="w-64 bg-gray-50 p-4 border-r">
         <h2 className="text-xl font-bold mb-4">图标分类</h2>
         <ul className="space-y-2">
@@ -91,7 +63,7 @@ export default function Home() {
           >
             全部图标
           </li>
-          {categories.map(category => (
+          {Array.isArray(categories) && categories.map((category) => (
             <li
               key={category}
               className={`cursor-pointer p-2 rounded ${
@@ -99,73 +71,49 @@ export default function Home() {
               }`}
               onClick={() => setCurrentCategory(category)}
             >
-              {metadata[category]?.categoryName || category}
+              {category}
             </li>
           ))}
         </ul>
       </aside>
 
-      {/* 主内容区 */}
+      {/* 右侧图标网格 */}
       <main className="flex-1 p-6">
-        {/* 搜索和颜色选择器 */}
-        <div className="mb-6 flex gap-4">
-          <input
-            type="text"
-            placeholder="搜索图标..."
-            className="flex-1 p-2 border rounded"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-          <div className="flex items-center gap-2">
-            <label htmlFor="color">填充颜色:</label>
-            <input
-              type="color"
-              id="color"
-              value={selectedColor}
-              onChange={(e) => setSelectedColor(e.target.value)}
-              className="w-12 h-8 cursor-pointer"
-            />
+        {icons.length === 0 ? (
+          <div className="flex items-center justify-center h-full text-gray-500">
+            暂无图标
           </div>
-        </div>
-
-        {/* 图标网格 */}
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-          {filteredIcons.map((icon, index) => {
-            const categoryMeta = metadata[icon.category] || {}
-            const iconMeta = categoryMeta.icons?.[icon.name.replace('.svg', '')] || {}
-            
-            return (
-              <div key={index} className="p-4 border rounded hover:shadow-lg">
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            {icons.map((icon) => (
+              <div key={icon.path} className="p-4 border rounded hover:shadow-lg">
                 <div className="h-16 flex items-center justify-center mb-2">
-                  <img
-                    src={icon.path}
-                    alt={iconMeta.name || icon.name}
+                  <img 
+                    src={icon.path} 
+                    alt={icon.name}
                     className="w-8 h-8"
-                    style={{ 
-                      filter: `brightness(0) saturate(100%) ${
-                        selectedColor !== '#000000' 
-                          ? `invert(1) drop-shadow(0 0 0 ${selectedColor})` 
-                          : ''
-                      }`
-                    }}
                   />
                 </div>
-                <p className="text-sm text-center mb-1">{iconMeta.name || icon.name}</p>
-                {iconMeta.description && (
-                  <p className="text-xs text-gray-500 text-center mb-2">
-                    {iconMeta.description}
-                  </p>
-                )}
-                <button
-                  onClick={() => copyIconCode(icon.path, selectedColor)}
-                  className="w-full px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600"
-                >
-                  复制代码
-                </button>
+                <p className="text-sm text-center mb-2">{icon.name}</p>
+                <div className="flex flex-col gap-2">
+                  <button
+                    onClick={() => copyIconCode(icon.path)}
+                    className="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600"
+                  >
+                    复制代码
+                  </button>
+                  
+                    href={icon.path}
+                    download={`${icon.name}.svg`}
+                    className="px-3 py-1 text-sm bg-green-500 text-white rounded hover:bg-green-600 text-center"
+                  >
+                    下载
+                  </a>
+                </div>
               </div>
-            )
-          })}
-        </div>
+            ))}
+          </div>
+        )}
       </main>
     </div>
   )
