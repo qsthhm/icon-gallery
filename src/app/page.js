@@ -15,8 +15,11 @@ export default function Home() {
       fetch('/api/categories').then(res => res.json()),
       fetch('/api/metadata').then(res => res.json())
     ]).then(([categoriesData, metadataData]) => {
+      console.log('Loaded metadata:', metadataData)
       setCategories(categoriesData)
       setMetadata(metadataData)
+    }).catch(error => {
+      console.error('Failed to load data:', error)
     })
   }, [])
 
@@ -24,7 +27,10 @@ export default function Home() {
     // 获取图标
     fetch(`/api/icons${currentCategory === 'all' ? '' : `?category=${currentCategory}`}`)
       .then(res => res.json())
-      .then(setIcons)
+      .then(iconsData => {
+        console.log('Loaded icons:', iconsData)
+        setIcons(iconsData)
+      })
       .catch(console.error)
   }, [currentCategory])
 
@@ -32,8 +38,8 @@ export default function Home() {
     try {
       const response = await fetch(path)
       let svg = await response.text()
-      // 如果设置了颜色，替换 SVG 中的填充颜色
-      if (color) {
+      // 如果设置了颜色且不是黑色，替换 SVG 中的填充颜色
+      if (color && color !== '#000000') {
         svg = svg.replace(/fill="[^"]*"/g, `fill="${color}"`)
         // 如果没有 fill 属性，添加一个
         if (!svg.includes('fill=')) {
@@ -48,15 +54,25 @@ export default function Home() {
     }
   }
 
-  // 过滤图标
   const filteredIcons = icons.filter(icon => {
+    if (!searchTerm) return true
+    
     const categoryMeta = metadata[icon.category] || {}
-    const iconMeta = categoryMeta.icons?.[icon.name] || {}
-    const searchString = `
-      ${icon.name}
-      ${iconMeta.name || ''}
-      ${iconMeta.description || ''}
-    `.toLowerCase()
+    const iconMeta = categoryMeta.icons?.[icon.name.replace('.svg', '')] || {}
+    
+    const searchString = [
+      icon.name,
+      iconMeta.name,
+      iconMeta.description,
+      categoryMeta.categoryName
+    ].filter(Boolean).join(' ').toLowerCase()
+    
+    console.log('Searching:', {
+      icon: icon.name,
+      searchString,
+      searchTerm: searchTerm.toLowerCase(),
+      match: searchString.includes(searchTerm.toLowerCase())
+    })
     
     return searchString.includes(searchTerm.toLowerCase())
   })
@@ -116,7 +132,7 @@ export default function Home() {
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
           {filteredIcons.map((icon, index) => {
             const categoryMeta = metadata[icon.category] || {}
-            const iconMeta = categoryMeta.icons?.[icon.name] || {}
+            const iconMeta = categoryMeta.icons?.[icon.name.replace('.svg', '')] || {}
             
             return (
               <div key={index} className="p-4 border rounded hover:shadow-lg">
