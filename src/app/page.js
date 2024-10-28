@@ -193,7 +193,7 @@ export default function Home() {
        <div className="mb-6">
          <h1 className="text-xl font-bold">Icon Gallery</h1>
          <p className="text-sm text-gray-500 mt-2">
-           SVG图标管理与预览工具
+           用AI写的图标代码工具
          </p>
        </div>
        {categories.length === 0 ? (
@@ -251,7 +251,7 @@ export default function Home() {
          <div className="flex gap-4">
            <input
              type="text"
-             placeholder="搜索图标..."
+             placeholder="搜索图标英文或中文名称..."
              className="flex-1 p-2 border rounded"
              value={searchTerm}
              onChange={(e) => setSearchTerm(e.target.value)}
@@ -263,7 +263,7 @@ export default function Home() {
              }`}
              title="切换排序方式"
            >
-             {sortDirection === 'none' && '排序'}
+             {sortDirection === 'none' && '无排序'}
              {sortDirection === 'asc' && 'A → Z'}
              {sortDirection === 'desc' && 'Z → A'}
            </button>
@@ -271,7 +271,7 @@ export default function Home() {
        </div>
 
        {/* 图标网格 */}
-       <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+       <div className="p-6 grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 gap-4">
          {sortedAndFilteredIcons.length === 0 ? (
            <div className="col-span-full text-center text-gray-500 py-12">
              {searchTerm ? '没有找到匹配的图标' : '暂无图标'}
