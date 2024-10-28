@@ -7,21 +7,7 @@ const nextConfig = {
           headers: [
             {
               key: 'Content-Security-Policy',
-              value: `
-                default-src 'self';
-                script-src 'self' 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval' 'inline-speculation-rules' https:;
-                style-src 'self' 'unsafe-inline';
-                img-src 'self' data: blob: https:;
-                font-src 'self';
-                connect-src 'self';
-                worker-src 'self';
-                manifest-src 'self';
-                base-uri 'self';
-                form-action 'self';
-                frame-ancestors 'none';
-                block-all-mixed-content;
-                upgrade-insecure-requests;
-              `.replace(/\s+/g, ' ').trim()
+              value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval' 'inline-speculation-rules' blob: data:; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self'; connect-src 'self'; worker-src 'self' blob:; manifest-src 'self'"
             }
           ],
         }
@@ -34,6 +20,6 @@ const nextConfig = {
       })
       return config
     }
-  }
-  
-  module.exports = nextConfig
+   }
+   
+   module.exports = nextConfig
