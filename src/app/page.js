@@ -52,6 +52,49 @@ export default function Home() {
     loadIcons();
   }, [currentCategory]);
 
+  // 在 filteredIcons 定义中添加调试日志
+const filteredIcons = useMemo(() => {
+  console.log('Current metadata:', metadata);
+  console.log('Current icons:', icons);
+  console.log('Search term:', searchTerm);
+
+  if (!Array.isArray(icons)) return [];
+  if (!searchTerm) return icons;
+
+  return icons.filter(icon => {
+    const iconName = icon.name.replace('.svg', '');
+    const categoryMeta = metadata[icon.category] || {};
+    const iconMeta = categoryMeta.icons?.[iconName] || {};
+    
+    const searchItems = [
+      iconName,
+      iconMeta.name,
+      iconMeta.description,
+      categoryMeta.categoryName
+    ];
+    
+    const searchString = searchItems
+      .filter(Boolean)
+      .join(' ')
+      .toLowerCase();
+
+    const searchTermLower = searchTerm.toLowerCase();
+    
+    // 详细的调试信息
+    console.log({
+      icon: icon.name,
+      category: icon.category,
+      metadata: iconMeta,
+      searchString,
+      searchTerm: searchTermLower,
+      items: searchItems,
+      matched: searchString.includes(searchTermLower)
+    });
+
+    return searchString.includes(searchTermLower);
+  });
+}, [icons, metadata, searchTerm]);
+
   // 复制图标代码
   const copyIconCode = async (path, color) => {
     try {
