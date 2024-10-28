@@ -38,7 +38,7 @@ Icon Gallery 是一个简洁易用的 SVG 图标管理和预览工具，支持�
 - Vercel
 
 ## 项目结构
-
+```
 ├── public/
 │   └── icons/              # SVG 图标目录
 │       ├── social/         # 分类目录示例
@@ -53,7 +53,7 @@ Icon Gallery 是一个简洁易用的 SVG 图标管理和预览工具，支持�
 │   ├── data/
 │   │   └── metadata/      # 元数据配置文件
 │   └── types/             # TypeScript 类型定义（可选）
-
+```
 
 ## 核心功能
 
