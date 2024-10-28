@@ -1,12 +1,41 @@
 'use client'
 import { useState, useEffect, useMemo } from 'react'
 
+// Toast 组件
+const Toast = ({ message, visible, onClose }) => {
+ useEffect(() => {
+   if (visible) {
+     const timer = setTimeout(onClose, 2000);
+     return () => clearTimeout(timer);
+   }
+ }, [visible, onClose]);
+
+ if (!visible) return null;
+
+ return (
+   <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 px-4 py-2 bg-gray-800 text-white rounded-lg shadow-lg z-50 transition-all duration-300 ease-in-out">
+     {message}
+   </div>
+ );
+};
+
 export default function Home() {
  const [categories, setCategories] = useState([])
  const [currentCategory, setCurrentCategory] = useState('all')
  const [icons, setIcons] = useState([])
  const [searchTerm, setSearchTerm] = useState('')
  const [metadata, setMetadata] = useState({})
+ const [toast, setToast] = useState({ visible: false, message: '' })
+
+ // 显示 Toast 的辅助函数
+ const showToast = (message) => {
+   setToast({ visible: true, message });
+ };
+
+ // 隐藏 Toast 的辅助函数
+ const hideToast = () => {
+   setToast({ visible: false, message: '' });
+ };
 
  // 加载分类和元数据
  useEffect(() => {
@@ -59,10 +88,10 @@ export default function Home() {
      const response = await fetch(path);
      const svg = await response.text();
      await navigator.clipboard.writeText(svg);
-     alert('复制成功！');
+     showToast('复制成功');
    } catch (error) {
      console.error('复制失败:', error);
-     alert('复制失败');
+     showToast('复制失败');
    }
  };
 
@@ -79,9 +108,10 @@ export default function Home() {
      a.click();
      document.body.removeChild(a);
      window.URL.revokeObjectURL(url);
+     showToast('下载成功');
    } catch (error) {
      console.error('下载失败:', error);
-     alert('下载失败');
+     showToast('下载失败');
    }
  };
 
@@ -115,32 +145,38 @@ export default function Home() {
      {/* 左侧目录 */}
      <aside className="w-64 bg-gray-50 p-4 border-r fixed h-screen overflow-y-auto">
        <h2 className="text-xl font-bold mb-4">图标分类</h2>
-       <ul className="space-y-2">
-         <li
-           className={`cursor-pointer p-2 rounded ${
-             currentCategory === 'all' ? 'bg-blue-500 text-white' : 'hover:bg-gray-100'
-           }`}
-           onClick={() => setCurrentCategory('all')}
-         >
-           全部图标
-         </li>
-         {Array.isArray(categories) && categories.map(category => (
+       {categories.length === 0 ? (
+         <div className="text-center text-gray-500 py-8">
+           暂无图标分类
+         </div>
+       ) : (
+         <ul className="space-y-2">
            <li
-             key={category}
              className={`cursor-pointer p-2 rounded ${
-               currentCategory === category ? 'bg-blue-500 text-white' : 'hover:bg-gray-100'
+               currentCategory === 'all' ? 'bg-blue-500 text-white' : 'hover:bg-gray-100'
              }`}
-             onClick={() => setCurrentCategory(category)}
+             onClick={() => setCurrentCategory('all')}
            >
-             <span>{category}</span>
-             {metadata[category]?.categoryName && (
-               <span className="text-gray-500 ml-2">
-                 ({metadata[category].categoryName})
-               </span>
-             )}
+             全部图标
            </li>
-         ))}
-       </ul>
+           {Array.isArray(categories) && categories.map(category => (
+             <li
+               key={category}
+               className={`cursor-pointer p-2 rounded ${
+                 currentCategory === category ? 'bg-blue-500 text-white' : 'hover:bg-gray-100'
+               }`}
+               onClick={() => setCurrentCategory(category)}
+             >
+               <span>{category}</span>
+               {metadata[category]?.categoryName && (
+                 <span className="text-gray-500 ml-2">
+                   {metadata[category].categoryName}
+                 </span>
+               )}
+             </li>
+           ))}
+         </ul>
+       )}
      </aside>
 
      {/* 主内容区 */}
@@ -158,48 +194,65 @@ export default function Home() {
 
        {/* 图标网格 */}
        <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-         {filteredIcons.map((icon, index) => {
-           const iconName = icon.name.replace('.svg', '');
-           const categoryMeta = metadata[icon.category] || {};
-           const iconMeta = categoryMeta.icons?.[iconName] || {};
-           
-           return (
-             <div key={index} className="p-4 border rounded hover:shadow-lg">
-               <div className="flex items-center justify-center mb-4">
-                 <img
-                   src={icon.path}
-                   alt={iconMeta.name || iconName}
-                   className="w-8 h-8"
-                 />
+         {filteredIcons.length === 0 ? (
+           <div className="col-span-full text-center text-gray-500 py-12">
+             {searchTerm ? '没有找到匹配的图标' : '暂无图标'}
+           </div>
+         ) : (
+           filteredIcons.map((icon, index) => {
+             const iconName = icon.name.replace('.svg', '');
+             const categoryMeta = metadata[icon.category] || {};
+             const iconMeta = categoryMeta.icons?.[iconName] || {};
+             
+             return (
+               <div key={index} className="p-4 border rounded hover:shadow-lg">
+                 <div className="flex items-center justify-center mb-4">
+                   <img
+                     src={icon.path}
+                     alt={iconMeta.name || iconName}
+                     className="w-8 h-8"
+                   />
+                 </div>
+                 <div className="mb-3 text-center">
+                   <p className="text-sm font-medium">{iconName}</p>
+                   {iconMeta.name && (
+                     <p className="text-sm text-gray-500">
+                       {iconMeta.name}
+                     </p>
+                   )}
+                   {iconMeta.description && (
+                     <p className="text-xs text-gray-400 mt-1">
+                       {iconMeta.description}
+                     </p>
+                   )}
+                 </div>
+                 <div className="flex justify-center space-x-2">
+                   <button
+                     onClick={() => copyIconCode(icon.path)}
+                     className="px-4 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600"
+                   >
+                     复制
+                   </button>
+                   <button
+                     onClick={() => downloadIcon(icon.path, iconName)}
+                     className="px-4 py-1 text-sm bg-green-500 text-white rounded hover:bg-green-600"
+                   >
+                     下载
+                   </button>
+                 </div>
                </div>
-               <div className="mb-3 text-center">
-                 <p className="text-sm font-medium">{iconName}</p>
-                 {iconMeta.name && (
-                   <p className="text-sm text-gray-500">({iconMeta.name})</p>
-                 )}
-                 {iconMeta.description && (
-                   <p className="text-xs text-gray-400 mt-1">{iconMeta.description}</p>
-                 )}
-               </div>
-               <div className="flex justify-center space-x-2">
-                 <button
-                   onClick={() => copyIconCode(icon.path)}
-                   className="px-4 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600"
-                 >
-                   复制
-                 </button>
-                 <button
-                   onClick={() => downloadIcon(icon.path, iconName)}
-                   className="px-4 py-1 text-sm bg-green-500 text-white rounded hover:bg-green-600"
-                 >
-                   下载
-                 </button>
-               </div>
-             </div>
-           )
-         })}
+             )
+           })
+         )}
        </div>
      </main>
+
+     {/* Toast 提示 */}
+     <Toast 
+       message={toast.message}
+       visible={toast.visible}
+       onClose={hideToast}
+     />
    </div>
  )
 }
