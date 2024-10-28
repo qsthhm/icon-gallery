@@ -26,17 +26,19 @@ export async function GET() {
        try {
          const content = fs.readFileSync(metadataPath, 'utf8')
          console.log(`Raw content for ${category}:`, content)
+         
+         // 直接使用文件中的内容
          metadata[category] = JSON.parse(content)
-         console.log(`Parsed metadata for ${category}:`, metadata[category])
        } catch (error) {
          console.error(`Error reading metadata for ${category}:`, error)
+         // 如果读取失败，使用默认值
          metadata[category] = {
            categoryName: category,
            icons: {}
          }
        }
      } else {
-       console.log(`No metadata.json found for ${category}`)
+       // 如果文件不存在，使用默认值
        metadata[category] = {
          categoryName: category,
          icons: {}
@@ -44,21 +46,18 @@ export async function GET() {
      }
    }
 
-   console.log('Final metadata:', metadata)
-   return NextResponse.json(metadata, {
+   console.log('Final metadata:', JSON.stringify(metadata, null, 2))
+   
+   return new NextResponse(JSON.stringify(metadata), {
      headers: {
        'Content-Type': 'application/json; charset=utf-8',
-       'Cache-Control': 'no-store, must-revalidate',
+       'Cache-Control': 'no-store, no-cache, must-revalidate',
      },
    })
  } catch (error) {
    console.error('API error:', error)
-   return NextResponse.json({ error: error.message }, { 
-     status: 500,
-     headers: {
-       'Content-Type': 'application/json; charset=utf-8',
-       'Cache-Control': 'no-store, must-revalidate',
-     },
-   })
+   return NextResponse.json({
+     error: error.message
+   }, { status: 500 })
  }
 }
