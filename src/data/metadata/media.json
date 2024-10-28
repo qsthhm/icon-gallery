@@ -1,0 +1,13 @@
+{
+    "categoryName": "媒体类",
+    "icons": {
+      "test": {
+        "name": "测试",
+        "description": "测试图标"
+      },
+      "twitter": {
+        "name": "推特",
+        "description": "推特图标"
+      }
+    }
+  }

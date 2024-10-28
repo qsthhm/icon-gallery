@@ -2,7 +2,6 @@
 
 一个简洁易用的 SVG 图标管理和预览工具，支持分类浏览、搜索、复制和下载。
 
-![预览图片]()  // 可以添加你的项目截图
 
 ## 功能特点
 
@@ -40,19 +39,6 @@ yarn install
 │   │   └── metadata/      # 元数据文件
 │   └── ...
 
-添加新图标
 
-在 public/icons 下创建分类目录
-将 SVG 文件放入对应目录
-在目录下创建 metadata.json 文件，格式如下：
 
-{
-  "categoryName": "分类中文名",
-  "icons": {
-    "icon-name": {
-      "name": "图标中文名",
-      "description": "图标描述"
-    }
-  }
-}
 
