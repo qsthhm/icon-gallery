@@ -6,7 +6,6 @@ export default function Home() {
   const [currentCategory, setCurrentCategory] = useState('all')
   const [icons, setIcons] = useState([])
 
-  // 获取分类
   useEffect(() => {
     fetch('/api/categories')
       .then(res => res.json())
@@ -19,7 +18,6 @@ export default function Home() {
       })
   }, [])
 
-  // 获取图标
   useEffect(() => {
     const url = currentCategory === 'all' 
       ? '/api/icons'
@@ -36,7 +34,6 @@ export default function Home() {
       })
   }, [currentCategory])
 
-  // 复制SVG代码
   const copyIconCode = async (path) => {
     try {
       const response = await fetch(path)
@@ -51,7 +48,6 @@ export default function Home() {
 
   return (
     <div className="flex min-h-screen">
-      {/* 左侧分类 */}
       <aside className="w-64 bg-gray-50 p-4 border-r">
         <h2 className="text-xl font-bold mb-4">图标分类</h2>
         <ul className="space-y-2">
@@ -77,7 +73,6 @@ export default function Home() {
         </ul>
       </aside>
 
-      {/* 右侧图标网格 */}
       <main className="flex-1 p-6">
         {icons.length === 0 ? (
           <div className="flex items-center justify-center h-full text-gray-500">
