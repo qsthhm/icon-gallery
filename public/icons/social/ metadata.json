@@ -1,0 +1,14 @@
+// public/icons/social/metadata.json
+{
+    "categoryName": "社交媒体",
+    "icons": {
+      "test": {
+        "name": "测试",
+        "description": "推特社交平台图标"
+      },
+      "facebook": {
+        "name": "脸书",
+        "description": "Facebook社交平台图标"
+      }
+    }
+  }
