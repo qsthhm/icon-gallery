@@ -26,7 +26,7 @@ export default function Home() {
        const metadataData = await metadataRes.json();
        
        console.log('API Response - Categories:', categoriesData);
-       console.log('API Response - Metadata:', metadataData);
+       console.log('API Response - Metadata:', JSON.stringify(metadataData, null, 2));
        
        if (metadataData.error) {
          console.error('Metadata error:', metadataData.error);
@@ -86,44 +86,40 @@ export default function Home() {
 
  // 过滤图标
  const filteredIcons = useMemo(() => {
-   console.log('Search debugging:');
-   console.log('- Metadata:', metadata);
-   console.log('- Current icons:', icons);
-   console.log('- Search term:', searchTerm);
+   console.log('完整的 metadata 数据:', JSON.stringify(metadata, null, 2));
+   console.log('搜索关键词:', searchTerm);
 
    if (!Array.isArray(icons)) return [];
    if (!searchTerm) return icons;
 
    return icons.filter(icon => {
      const iconName = icon.name.replace('.svg', '');
-     const categoryMeta = metadata[icon.category] || { categoryName: icon.category };
+     const categoryMeta = metadata[icon.category] || {};
      const iconMeta = categoryMeta.icons?.[iconName] || {};
      
-     // 构建搜索项
-     const searchItems = new Set([
-       iconName,                          // 文件名
-       icon.category,                     // 分类名
-       categoryMeta.categoryName,         // 分类中文名
-       iconMeta.name,                     // 图标中文名
-       iconMeta.description,              // 图标描述
-     ]);
+     console.log('处理图标:', {
+       name: iconName,
+       category: icon.category,
+       categoryMeta: JSON.stringify(categoryMeta, null, 2),
+       iconMeta: JSON.stringify(iconMeta, null, 2)
+     });
 
      // 构建搜索字符串
-     const searchString = Array.from(searchItems)
-       .filter(Boolean)                   // 移除空值
-       .join(' ')                        // 合并为字符串
-       .toLowerCase();                    // 转为小写
+     const searchString = [
+       iconName,
+       icon.category,
+       categoryMeta.categoryName,
+       iconMeta.name,
+       iconMeta.description
+     ]
+       .filter(Boolean)
+       .join(' ')
+       .toLowerCase();
      
      const searchTermLower = searchTerm.toLowerCase();
      
-     // 调试输出
-     console.log('Icon search details:', {
-       icon: icon.name,
-       category: icon.category,
-       iconMeta,
-       categoryMeta,
+     console.log('搜索匹配:', {
        searchString,
-       searchItems: Array.from(searchItems),
        searchTerm: searchTermLower,
        matched: searchString.includes(searchTermLower)
      });
