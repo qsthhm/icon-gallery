@@ -26,6 +26,7 @@ export default function Home() {
  const [searchTerm, setSearchTerm] = useState('')
  const [metadata, setMetadata] = useState({})
  const [toast, setToast] = useState({ visible: false, message: '' })
+ const [sortDirection, setSortDirection] = useState('asc')
 
  // 显示 Toast 的辅助函数
  const showToast = (message) => {
@@ -115,6 +116,22 @@ export default function Home() {
    }
  };
 
+ // 对分类进行排序
+ const sortedCategories = useMemo(() => {
+   if (!Array.isArray(categories)) return [];
+   
+   return [...categories].sort((a, b) => {
+     const orderA = metadata[a]?.order || 0;
+     const orderB = metadata[b]?.order || 0;
+     
+     // 优先按 order 排序
+     if (orderA !== orderB) return orderA - orderB;
+     
+     // 其次按名称排序
+     return a.localeCompare(b);
+   });
+ }, [categories, metadata]);
+
  // 过滤图标
  const filteredIcons = useMemo(() => {
    if (!Array.isArray(icons)) return [];
@@ -140,11 +157,45 @@ export default function Home() {
    });
  }, [icons, metadata, searchTerm]);
 
+ // 对图标进行排序
+ const sortedAndFilteredIcons = useMemo(() => {
+   let result = [...filteredIcons];
+
+   if (sortDirection !== 'none') {
+     result.sort((a, b) => {
+       const nameA = a.name.replace('.svg', '').toLowerCase();
+       const nameB = b.name.replace('.svg', '').toLowerCase();
+       return sortDirection === 'asc' 
+         ? nameA.localeCompare(nameB)
+         : nameB.localeCompare(nameA);
+     });
+   }
+
+   return result;
+ }, [filteredIcons, sortDirection]);
+
+ // 切换排序方向
+ const toggleSort = () => {
+   setSortDirection(current => {
+     switch (current) {
+       case 'none': return 'asc';
+       case 'asc': return 'desc';
+       case 'desc': return 'none';
+       default: return 'asc';
+     }
+   });
+ };
+
  return (
    <div className="flex min-h-screen">
      {/* 左侧目录 */}
      <aside className="w-64 bg-gray-50 p-4 border-r fixed h-screen overflow-y-auto">
-       <h2 className="text-xl font-bold mb-4">图标分类</h2>
+       <div className="mb-6">
+         <h1 className="text-xl font-bold">Icon Gallery</h1>
+         <p className="text-sm text-gray-500 mt-2">
+           SVG图标管理与预览工具
+         </p>
+       </div>
        {categories.length === 0 ? (
          <div className="text-center text-gray-500 py-8">
            暂无图标分类
@@ -159,7 +210,7 @@ export default function Home() {
            >
              全部图标
            </li>
-           {Array.isArray(categories) && categories.map(category => (
+           {sortedCategories.map(category => (
              <li
                key={category}
                className={`cursor-pointer p-2 rounded ${
@@ -181,25 +232,52 @@ export default function Home() {
 
      {/* 主内容区 */}
      <main className="flex-1 ml-64">
-       {/* 搜索框 - 固定在顶部 */}
+       {/* 标题和描述 */}
+       <div className="bg-white border-b px-6 py-4">
+         <h2 className="text-lg font-semibold">
+           {currentCategory === 'all' 
+             ? '所有图标' 
+             : metadata[currentCategory]?.categoryName || currentCategory}
+         </h2>
+         {currentCategory !== 'all' && metadata[currentCategory]?.description && (
+           <p className="text-sm text-gray-500 mt-1">
+             {metadata[currentCategory].description}
+           </p>
+         )}
+       </div>
+
+       {/* 搜索栏和排序按钮 */}
        <div className="sticky top-0 bg-white z-10 p-4 border-b shadow-sm">
-         <input
-           type="text"
-           placeholder="搜索图标..."
-           className="w-full p-2 border rounded"
-           value={searchTerm}
-           onChange={(e) => setSearchTerm(e.target.value)}
-         />
+         <div className="flex gap-4">
+           <input
+             type="text"
+             placeholder="搜索图标..."
+             className="flex-1 p-2 border rounded"
+             value={searchTerm}
+             onChange={(e) => setSearchTerm(e.target.value)}
+           />
+           <button
+             onClick={toggleSort}
+             className={`px-4 py-2 border rounded hover:bg-gray-50 ${
+               sortDirection !== 'none' ? 'bg-gray-100' : ''
+             }`}
+             title="切换排序方式"
+           >
+             {sortDirection === 'none' && '排序'}
+             {sortDirection === 'asc' && 'A → Z'}
+             {sortDirection === 'desc' && 'Z → A'}
+           </button>
+         </div>
        </div>
 
        {/* 图标网格 */}
        <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-         {filteredIcons.length === 0 ? (
+         {sortedAndFilteredIcons.length === 0 ? (
            <div className="col-span-full text-center text-gray-500 py-12">
              {searchTerm ? '没有找到匹配的图标' : '暂无图标'}
            </div>
          ) : (
-           filteredIcons.map((icon, index) => {
+           sortedAndFilteredIcons.map((icon, index) => {
              const iconName = icon.name.replace('.svg', '');
              const categoryMeta = metadata[icon.category] || {};
              const iconMeta = categoryMeta.icons?.[iconName] || {};
