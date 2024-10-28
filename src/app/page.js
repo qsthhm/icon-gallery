@@ -15,11 +15,13 @@ export default function Home() {
       fetch('/api/categories').then(res => res.json()),
       fetch('/api/metadata').then(res => res.json())
     ]).then(([categoriesData, metadataData]) => {
-      console.log('Loaded metadata:', metadataData)
-      setCategories(categoriesData)
-      setMetadata(metadataData)
+      // 确保 categoriesData 是数组
+      setCategories(Array.isArray(categoriesData) ? categoriesData : [])
+      setMetadata(metadataData || {})
     }).catch(error => {
       console.error('Failed to load data:', error)
+      setCategories([])
+      setMetadata({})
     })
   }, [])
 
@@ -28,10 +30,13 @@ export default function Home() {
     fetch(`/api/icons${currentCategory === 'all' ? '' : `?category=${currentCategory}`}`)
       .then(res => res.json())
       .then(iconsData => {
-        console.log('Loaded icons:', iconsData)
-        setIcons(iconsData)
+        // 确保 iconsData 是数组
+        setIcons(Array.isArray(iconsData) ? iconsData : [])
       })
-      .catch(console.error)
+      .catch(error => {
+        console.error('Failed to load icons:', error)
+        setIcons([])
+      })
   }, [currentCategory])
 
   const copyIconCode = async (path, color) => {
@@ -52,7 +57,7 @@ export default function Home() {
     }
   }
 
-  const filteredIcons = icons.filter(icon => {
+  const filteredIcons = Array.isArray(icons) ? icons.filter(icon => {
     if (!searchTerm) return true
     
     const categoryMeta = metadata[icon.category] || {}
@@ -66,7 +71,7 @@ export default function Home() {
     ].filter(Boolean).join(' ').toLowerCase()
     
     return searchString.includes(searchTerm.toLowerCase())
-  })
+  }) : []
 
   return (
     <div className="flex min-h-screen">
@@ -81,7 +86,7 @@ export default function Home() {
           >
             全部图标
           </li>
-          {categories.map(category => (
+          {Array.isArray(categories) && categories.map(category => (
             <li
               key={category}
               className={`cursor-pointer p-2 rounded ${
@@ -117,7 +122,7 @@ export default function Home() {
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-          {filteredIcons.map((icon, index) => {
+          {Array.isArray(filteredIcons) && filteredIcons.map((icon, index) => {
             const categoryMeta = metadata[icon.category] || {}
             const iconMeta = categoryMeta.icons?.[icon.name.replace('.svg', '')] || {}
             
