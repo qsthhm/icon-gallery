@@ -10,25 +10,32 @@ export default function Home() {
     // 获取分类
     fetch('/api/categories')
       .then(res => res.json())
-      .then(data => {
-        console.log('categories:', data)  // 添加日志
-        setCategories(data)
-      })
+      .then(setCategories)
+      .catch(console.error)
   }, [])
 
   useEffect(() => {
     // 获取图标
     fetch(`/api/icons${currentCategory === 'all' ? '' : `?category=${currentCategory}`}`)
       .then(res => res.json())
-      .then(data => {
-        console.log('icons:', data)  // 添加日志
-        setIcons(data)
-      })
+      .then(setIcons)
+      .catch(console.error)
   }, [currentCategory])
+
+  const copyIconCode = async (path) => {
+    try {
+      const response = await fetch(path)
+      const svg = await response.text()
+      await navigator.clipboard.writeText(svg)
+      alert('复制成功！')
+    } catch (error) {
+      console.error('复制失败:', error)
+      alert('复制失败')
+    }
+  }
 
   return (
     <div className="flex min-h-screen">
-      {/* 左侧分类 */}
       <aside className="w-64 bg-gray-50 p-4 border-r">
         <h2 className="text-xl font-bold mb-4">图标分类</h2>
         <ul className="space-y-2">
@@ -40,7 +47,7 @@ export default function Home() {
           >
             全部图标
           </li>
-          {categories.map((category) => (
+          {categories.map(category => (
             <li
               key={category}
               className={`cursor-pointer p-2 rounded ${
@@ -54,36 +61,25 @@ export default function Home() {
         </ul>
       </aside>
 
-      {/* 右侧图标网格 */}
       <main className="flex-1 p-6">
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-          {icons.map((icon) => (
-            <div key={icon.path} className="p-4 border rounded hover:shadow-lg">
+          {icons.map((icon, index) => (
+            <div key={index} className="p-4 border rounded hover:shadow-lg">
               <div className="h-16 flex items-center justify-center mb-2">
-                <img 
-                  src={icon.path} 
+                <img
+                  src={icon.path}
                   alt={icon.name}
                   className="w-8 h-8"
+                  style={{ filter: 'none' }}
                 />
               </div>
               <p className="text-sm text-center mb-2">{icon.name}</p>
-              <div className="flex flex-col gap-2">
-                <button
-                  onClick={() => fetch(icon.path)
-                    .then(res => res.text())
-                    .then(svg => navigator.clipboard.writeText(svg))
-                  }
-                  className="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600"
-                >
-                  复制代码
-                </button>
-                <button
-                  onClick={() => window.open(icon.path, '_blank')}
-                  className="px-3 py-1 text-sm bg-green-500 text-white rounded hover:bg-green-600"
-                >
-                  下载
-                </button>
-              </div>
+              <button
+                onClick={() => copyIconCode(icon.path)}
+                className="w-full px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600"
+              >
+                复制代码
+              </button>
             </div>
           ))}
         </div>
