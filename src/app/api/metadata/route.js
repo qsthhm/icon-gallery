@@ -5,22 +5,35 @@ import path from 'path'
 export async function GET() {
   try {
     const iconsDir = path.join(process.cwd(), 'public/icons')
-    const categories = fs.readdirSync(iconsDir).filter(
-      file => fs.statSync(path.join(iconsDir, file)).isDirectory()
-    )
+    
+    // 确保目录存在
+    if (!fs.existsSync(iconsDir)) {
+      return NextResponse.json({})
+    }
 
     const metadata = {}
     
+    // 获取所有分类目录
+    const categories = fs.readdirSync(iconsDir)
+      .filter(file => fs.statSync(path.join(iconsDir, file)).isDirectory())
+    
+    // 读取每个分类的 metadata.json
     categories.forEach(category => {
       const metadataPath = path.join(iconsDir, category, 'metadata.json')
       if (fs.existsSync(metadataPath)) {
-        const categoryMetadata = JSON.parse(fs.readFileSync(metadataPath, 'utf8'))
-        metadata[category] = categoryMetadata
+        try {
+          const data = fs.readFileSync(metadataPath, 'utf8')
+          metadata[category] = JSON.parse(data)
+          console.log(`Loaded metadata for ${category}:`, metadata[category])  // 调试日志
+        } catch (error) {
+          console.error(`Error loading metadata for ${category}:`, error)
+        }
       }
     })
 
     return NextResponse.json(metadata)
   } catch (error) {
+    console.error('Error in metadata API:', error)
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }
