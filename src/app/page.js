@@ -86,39 +86,45 @@ export default function Home() {
 
  // 过滤图标
  const filteredIcons = useMemo(() => {
-   console.log('Current metadata:', metadata);
-   console.log('Current icons:', icons);
-   console.log('Search term:', searchTerm);
+   console.log('Search debugging:');
+   console.log('- Metadata:', metadata);
+   console.log('- Current icons:', icons);
+   console.log('- Search term:', searchTerm);
 
    if (!Array.isArray(icons)) return [];
    if (!searchTerm) return icons;
 
    return icons.filter(icon => {
      const iconName = icon.name.replace('.svg', '');
-     const categoryMeta = metadata[icon.category] || {};
+     const categoryMeta = metadata[icon.category] || { categoryName: icon.category };
      const iconMeta = categoryMeta.icons?.[iconName] || {};
      
-     const searchItems = [
-       iconName,
-       iconMeta.name,
-       iconMeta.description,
-       categoryMeta.categoryName
-     ];
-     
-     const searchString = searchItems
-       .filter(Boolean)
-       .join(' ')
-       .toLowerCase();
+     // 构建搜索项
+     const searchItems = new Set([
+       iconName,                          // 文件名
+       icon.category,                     // 分类名
+       categoryMeta.categoryName,         // 分类中文名
+       iconMeta.name,                     // 图标中文名
+       iconMeta.description,              // 图标描述
+     ]);
 
+     // 构建搜索字符串
+     const searchString = Array.from(searchItems)
+       .filter(Boolean)                   // 移除空值
+       .join(' ')                        // 合并为字符串
+       .toLowerCase();                    // 转为小写
+     
      const searchTermLower = searchTerm.toLowerCase();
      
-     console.log({
+     // 调试输出
+     console.log('Icon search details:', {
        icon: icon.name,
        category: icon.category,
-       metadata: iconMeta,
+       iconMeta,
+       categoryMeta,
        searchString,
+       searchItems: Array.from(searchItems),
        searchTerm: searchTermLower,
-       items: searchItems,
        matched: searchString.includes(searchTermLower)
      });
 
