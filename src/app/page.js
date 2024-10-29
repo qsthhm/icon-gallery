@@ -39,6 +39,7 @@ const CopyButton = ({ onClick }) => (
 const IconModal = ({ icon, metadata, onClose, onCopy, onDownload }) => {
   const [activeTab, setActiveTab] = useState('svg')
   const [svgCode, setSvgCode] = useState('')
+  const [isLoading, setIsLoading] = useState(true)
   const iconName = icon.name.replace('.svg', '')
   const categoryMeta = metadata[icon.category] || {}
   const iconMeta = categoryMeta.icons?.[iconName] || {}
@@ -46,6 +47,7 @@ const IconModal = ({ icon, metadata, onClose, onCopy, onDownload }) => {
   // 获取实际的SVG代码
   useEffect(() => {
     const fetchSvgCode = async () => {
+      setIsLoading(true);
       try {
         const response = await fetch(icon.path);
         const code = await response.text();
@@ -53,6 +55,8 @@ const IconModal = ({ icon, metadata, onClose, onCopy, onDownload }) => {
       } catch (error) {
         console.error('Failed to fetch SVG code:', error);
         setSvgCode('');
+      } finally {
+        setIsLoading(false);
       }
     };
     fetchSvgCode();
@@ -64,15 +68,8 @@ const IconModal = ({ icon, metadata, onClose, onCopy, onDownload }) => {
   }
 
   return (
-    <div 
-      className="fixed inset-0 z-50 flex items-end justify-center"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) {
-          onClose();
-        }
-      }}
-    >
-      <div className="bg-white w-full max-w-3xl rounded-t-xl p-6 border-t border-x shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
+    <div className="fixed inset-x-0 bottom-5 z-50 flex justify-center">
+      <div className="bg-white w-full max-w-3xl rounded-xl p-6 border shadow-lg">
         <div className="flex justify-between items-start mb-6">
           <div className="flex items-center space-x-4">
             <img src={icon.path} alt={iconMeta.name || iconName} className="w-12 h-12" />
@@ -132,14 +129,18 @@ const IconModal = ({ icon, metadata, onClose, onCopy, onDownload }) => {
               </div>
               <CopyButton onClick={copyCode} />
             </div>
-            <div className="bg-gray-50 rounded-lg p-4 font-mono text-sm">
-              <code>
-                {activeTab === 'svg' ? (
-                  svgCode
-                ) : (
-                  `<${iconName} :size="32" />`
-                )}
-              </code>
+            <div className="bg-gray-50 rounded-lg p-4 font-mono text-sm h-[200px] overflow-auto">
+              {isLoading ? (
+                <div className="animate-pulse space-y-2">
+                  <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                  <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                  <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+                </div>
+              ) : (
+                <code className="whitespace-pre">
+                  {activeTab === 'svg' ? svgCode : `<${iconName} :size="32" />`}
+                </code>
+              )}
             </div>
           </div>
         </div>
@@ -266,6 +267,7 @@ function IconGallery() {
   // 切换分类时更新 URL
   const handleCategoryChange = (category) => {
     setCurrentCategory(category)
+    setSearchTerm('') // 切换分类时清空搜索
     if (category === 'all') {
       router.push('/')
     } else {
@@ -297,7 +299,7 @@ function IconGallery() {
     });
   }, [categories, metadata]);
 
-  // 处理图标的过滤、排序和分组
+  // 对图标进行排序和分组
   const groupedIcons = useMemo(() => {
     if (!Array.isArray(icons)) return [];
     
@@ -402,7 +404,7 @@ function IconGallery() {
                 <input
                   type="text"
                   placeholder="搜索图标..."
-                  className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                  className="w-full pl-10 pr-10 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
@@ -414,6 +416,16 @@ function IconGallery() {
                 >
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
+                {searchTerm && (
+                  <button
+                    className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600"
+                    onClick={() => setSearchTerm('')}
+                  >
+                    <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                    </svg>
+                  </button>
+                )}
               </div>
               <button
                 onClick={toggleSort}
@@ -462,10 +474,7 @@ function IconGallery() {
                       className={`aspect-square p-4 rounded-lg cursor-pointer transition-colors
                         ${selectedIcon === icon ? 'bg-white' : 'hover:bg-gray-100'}
                       `}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedIcon(icon);
-                      }}
+                      onClick={() => setSelectedIcon(icon)}
                     >
                       <div className="flex flex-col items-center text-center space-y-2">
                         <img
