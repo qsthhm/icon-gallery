@@ -1,12 +1,12 @@
 {
     "categoryName": "媒体类",
     "icons": {
-      "test": {
-        "name": "测试",
-        "description": "测试图标"
+      "image": {
+        "name": "图片/相册",
+        "description": "图片/相册"
       },
-      "twitter": {
-        "name": "推特",
+      "video": {
+        "name": "视频/直播",
         "description": "推特图标"
       }
     }

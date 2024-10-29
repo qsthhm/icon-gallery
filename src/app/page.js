@@ -129,7 +129,7 @@ const IconModal = ({ icon, metadata, onClose, onCopy, onDownload }) => {
               </div>
               <CopyButton onClick={copyCode} />
             </div>
-            <div className="bg-gray-50 rounded-lg p-4 font-mono text-sm h-[200px] overflow-auto">
+            <div className="bg-gray-50 rounded-lg p-4 h-[200px] overflow-y-auto">
               {isLoading ? (
                 <div className="animate-pulse space-y-2">
                   <div className="h-4 bg-gray-200 rounded w-3/4"></div>
@@ -137,7 +137,7 @@ const IconModal = ({ icon, metadata, onClose, onCopy, onDownload }) => {
                   <div className="h-4 bg-gray-200 rounded w-2/3"></div>
                 </div>
               ) : (
-                <code className="whitespace-pre">
+                <code className="font-mono text-sm whitespace-pre-wrap break-all" style={{ width: '600px', display: 'inline-block' }}>
                   {activeTab === 'svg' ? svgCode : `<${iconName} :size="32" />`}
                 </code>
               )}
@@ -267,7 +267,6 @@ function IconGallery() {
   // 切换分类时更新 URL
   const handleCategoryChange = (category) => {
     setCurrentCategory(category)
-    setSearchTerm('') // 切换分类时清空搜索
     if (category === 'all') {
       router.push('/')
     } else {
