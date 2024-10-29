@@ -97,7 +97,7 @@ const IconModal = ({ icon, metadata, onClose, onCopy, onDownload }) => {
             </svg>
           </button>
         </div>
-        
+
         <div className="flex flex-col md:flex-row gap-6">
           <div className="flex md:flex-col gap-3 md:w-48">
             <button
@@ -150,7 +150,6 @@ const IconModal = ({ icon, metadata, onClose, onCopy, onDownload }) => {
               </div>
               <CopyButton onClick={copyCode} />
             </div>
-
             <div className="bg-neutral-50 rounded-lg p-4 h-[200px] border border-neutral-200">
               {isLoading ? (
                 <div className="animate-pulse space-y-2">
@@ -211,13 +210,11 @@ function IconGallery() {
   const [sortDirection, setSortDirection] = useState('asc')
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
-  // 从 URL 读取当前分类
   useEffect(() => {
     const category = searchParams.get('category') || 'all'
     setCurrentCategory(category)
   }, [searchParams])
 
-  // Mobile menu close on route change
   useEffect(() => {
     setMobileMenuOpen(false)
   }, [currentCategory])
@@ -230,7 +227,86 @@ function IconGallery() {
     setToast({ visible: false, message: '' });
   };
 
-  // 加载数据和其他函数保持不变...
+  // 加载分类和元数据
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const [categoriesRes, metadataRes] = await Promise.all([
+          fetch('/api/categories'),
+          fetch('/api/metadata')
+        ]);
+
+        const categoriesData = await categoriesRes.json();
+        const metadataData = await metadataRes.json();
+        
+        setCategories(Array.isArray(categoriesData) ? categoriesData : []);
+        setMetadata(metadataData || {});
+      } catch (error) {
+        console.error('Failed to load data:', error);
+        setCategories([]);
+        setMetadata({});
+      }
+    };
+
+    loadData();
+  }, []);
+
+  // 加载图标
+  useEffect(() => {
+    const loadIcons = async () => {
+      try {
+        const res = await fetch(`/api/icons${currentCategory === 'all' ? '' : `?category=${currentCategory}`}`);
+        const data = await res.json();
+        setIcons(Array.isArray(data) ? data : []);
+      } catch (error) {
+        console.error('Failed to load icons:', error);
+        setIcons([]);
+      }
+    };
+
+    loadIcons();
+  }, [currentCategory]);
+
+  // 复制和下载函数保持不变...
+  const copyIconCode = async (path) => {
+    try {
+      const response = await fetch(path);
+      const svg = await response.text();
+      await navigator.clipboard.writeText(svg);
+      showToast('复制成功');
+    } catch (error) {
+      console.error('复制失败:', error);
+      showToast('复制失败');
+    }
+  };
+
+  const downloadIcon = async (path, name) => {
+    try {
+      const response = await fetch(path);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${name}.svg`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+      showToast('下载成功');
+    } catch (error) {
+      console.error('下载失败:', error);
+      showToast('下载失败');
+    }
+  };
+
+  const handleCategoryChange = (category) => {
+    setCurrentCategory(category)
+    if (category === 'all') {
+      router.push('/')
+    } else {
+      router.push(`?category=${category}`)
+    }
+  }
 
   return (
     <div className="min-h-screen bg-neutral-50">
@@ -262,7 +338,39 @@ function IconGallery() {
           mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
         }`}>
           <nav className="p-4">
-            {/* 导航内容... */}
+            <ul className="space-y-1">
+              <li>
+                <button
+                  className={`w-full px-3 py-2 text-left rounded-lg transition-colors ${
+                    currentCategory === 'all' 
+                      ? 'bg-neutral-100 text-neutral-900' 
+                      : 'hover:bg-neutral-50'
+                  }`}
+                  onClick={() => handleCategoryChange('all')}
+                >
+                  <span className="block font-medium">全部分类</span>
+                </button>
+              </li>
+              {categories.map(category => (
+                <li key={category}>
+                  <button
+                    className={`w-full px-3 py-2 text-left rounded-lg transition-colors ${
+                      currentCategory === category 
+                        ? 'bg-neutral-100 text-neutral-900' 
+                        : 'hover:bg-neutral-50'
+                    }`}
+                    onClick={() => handleCategoryChange(category)}
+                  >
+                    <span className="block font-medium">{category}</span>
+                    {metadata[category]?.categoryName && (
+                      <span className="block text-sm text-neutral-500">
+                        {metadata[category].categoryName}
+                      </span>
+                    )}
+                  </button>
+                </li>
+              ))}
+            </ul>
           </nav>
         </div>
       </div>
@@ -274,7 +382,39 @@ function IconGallery() {
           <p className="text-sm text-neutral-600 mt-2">SVG图标管理与预览工具</p>
         </div>
         <nav className="p-4">
-          {/* 导航内容... */}
+          <ul className="space-y-1">
+            <li>
+              <button
+                className={`w-full px-3 py-2 text-left rounded-lg transition-colors ${
+                  currentCategory === 'all' 
+                    ? 'bg-neutral-100 text-neutral-900' 
+                    : 'hover:bg-neutral-50'
+                }`}
+                onClick={() => handleCategoryChange('all')}
+              >
+                <span className="block font-medium">全部分类</span>
+              </button>
+            </li>
+            {categories.map(category => (
+              <li key={category}>
+                <button
+                  className={`w-full px-3 py-2 text-left rounded-lg transition-colors ${
+                    currentCategory === category 
+                      ? 'bg-neutral-100 text-neutral-900' 
+                      : 'hover:bg-neutral-50'
+                  }`}
+                  onClick={() => handleCategoryChange(category)}
+                >
+                  <span className="block font-medium">{category}</span>
+                  {metadata[category]?.categoryName && (
+                    <span className="block text-sm text-neutral-500">
+                      {metadata[category].categoryName}
+                    </span>
+                  )}
+                </button>
+              </li>
+            ))}
+          </ul>
         </nav>
       </aside>
 
@@ -294,49 +434,83 @@ function IconGallery() {
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
-                {/* 搜索图标和清除按钮... */}
+                <svg 
+                  className="absolute left-3 top-2.5 h-5 w-5 text-neutral-400" 
+                  fill="none" 
+                  viewBox="0 0 24 24" 
+                  stroke="currentColor"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                {searchTerm && (
+                  <button
+                    className="absolute right-3 top-2.5 text-neutral-400 hover:text-neutral-600"
+                    onClick={() => setSearchTerm('')}
+                  >
+                    <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                    </svg>
+                  </button>
+                )}
               </div>
-              {/* 排序按钮... */}
+              <button
+                onClick={() => setSortDirection(current => current === 'asc' ? 'desc' : 'asc')}
+                className="px-4 py-2 border border-neutral-300 rounded-lg 
+                  hover:bg-neutral-50 transition-colors
+                  flex items-center justify-center gap-2
+                  md:w-auto w-full"
+                title="切换排序方式"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9M3 12h6m-6 4h13" />
+                </svg>
+                {sortDirection === 'asc' ? 'A → Z' : 'Z → A'}
+              </button>
             </div>
           </div>
         </div>
 
         {/* 图标网格 */}
         <div className="px-4 lg:px-6 py-6">
-          {groupedIcons.map(group => group.icons.length > 0 && (
+          {categories.map(group => group.icons?.length > 0 && (
             <div key={group.category} className="mb-12">
               <h2 className="text-xl font-semibold text-neutral-900 mb-6">
                 {group.categoryName || group.category}
               </h2>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-4">
-                {group.icons.map((icon, index) => (
-                  <div
-                    key={index}
-                    className="aspect-square p-4 rounded-lg cursor-pointer
-                      bg-white border border-neutral-200 
-                      hover:border-neutral-300 hover:shadow-md
-                      transition-all duration-200"
-                    onClick={() => setSelectedIcon(icon)}
-                  >
-                    <div className="flex flex-col items-center text-center space-y-2">
-                      <div className="p-2 rounded-lg bg-neutral-50">
-                        <img
-                          src={icon.path}
-                          alt={iconMeta.name || iconName}
-                          className="w-8 h-8"
-                        />
-                      </div>
-                      <p className="text-sm font-medium text-neutral-900 truncate w-full">
-                        {iconName}
-                      </p>
-                      {iconMeta.name && (
-                        <p className="text-xs text-neutral-500 truncate w-full">
-                          {iconMeta.name}
+                {group.icons.map((icon, index) => {
+                  const iconName = icon.name.replace('.svg', '')
+                  const iconMeta = metadata[group.category]?.icons?.[iconName] || {}
+                  
+                  return (
+                    <div
+                      key={index}
+                      className="aspect-square p-4 rounded-lg cursor-pointer
+                        bg-white border border-neutral-200 
+                        hover:border-neutral-300 hover:shadow-md
+                        transition-all duration-200"
+                      onClick={() => setSelectedIcon(icon)}
+                    >
+                      <div className="flex flex-col items-center text-center space-y-2">
+                        <div className="p-2 rounded-lg bg-neutral-50">
+                          <img
+                            src={icon.path}
+                            alt={iconMeta.name || iconName}
+                            className="w-8 h-8"
+                          />
+                        </div>
+                        <p className="text-sm font-medium text-neutral-900 truncate w-full">
+                          {iconName}
                         </p>
-                      )}
+                        {iconMeta.name && (
+                          <p className="text-xs text-neutral-500 truncate w-full">
+                            {iconMeta.name}
+                          </p>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             </div>
           ))}
