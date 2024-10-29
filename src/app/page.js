@@ -138,23 +138,29 @@ const IconModal = ({ icon, metadata, onClose, onCopy, onDownload }) => {
               <CopyButton onClick={copyCode} />
             </div>
             <div className="bg-gray-50 rounded-lg p-4 h-[200px]">
-              {isLoading ? (
-                <div className="animate-pulse space-y-2">
-                  <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                  <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-                  <div className="h-4 bg-gray-200 rounded w-2/3"></div>
-                </div>
-              ) : (
-                <div className="h-full overflow-y-auto">
-                  <code 
-                    className="font-mono text-sm whitespace-pre break-all block min-w-0 w-full cursor-pointer"
-                    onClick={selectCode}
-                  >
-                    {activeTab === 'svg' ? svgCode : `<${iconName} :size="32" />`}
-                  </code>
-                </div>
-              )}
-            </div>
+  {isLoading ? (
+    <div className="animate-pulse space-y-2">
+      <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+      <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+      <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+    </div>
+  ) : (
+    <div className="h-full overflow-y-auto">
+      <code 
+        className="font-mono text-sm block min-w-0 w-full cursor-pointer"
+        style={{
+          whiteSpace: 'pre-wrap',       /* 保留空格和换行符，自动换行 */
+          wordBreak: 'break-all',       /* 允许在任意字符间断行 */
+          wordWrap: 'break-word',       /* 对长单词换行 */
+          overflowWrap: 'break-word'    /* 确保长单词换行 */
+        }}
+        onClick={selectCode}
+      >
+        {activeTab === 'svg' ? svgCode : `<${iconName} :size="32" />`}
+      </code>
+    </div>
+  )}
+</div>
           </div>
         </div>
       </div>
