@@ -14,7 +14,14 @@ const Toast = ({ message, visible, onClose }) => {
   if (!visible) return null;
 
   return (
-    <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 px-4 py-2 bg-gray-800 text-white rounded-lg shadow-lg z-50 transition-all duration-300 ease-in-out">
+    <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 
+      px-6 py-3 bg-gray-800 text-white rounded-lg shadow-xl z-50 
+      transition-all duration-300 ease-in-out
+      animate-fade-in-up flex items-center gap-2"
+    >
+      <svg className="w-5 h-5 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+      </svg>
       {message}
     </div>
   );
@@ -24,7 +31,8 @@ const Toast = ({ message, visible, onClose }) => {
 const MenuIcon = ({ onClick }) => (
   <button
     onClick={onClick}
-    className="lg:hidden fixed top-4 left-4 z-30 p-2 rounded-lg bg-gray-100 hover:bg-gray-200"
+    className="lg:hidden fixed top-4 left-4 z-30 p-2 rounded-lg bg-white hover:bg-gray-100 
+      shadow-md transition-colors duration-200"
   >
     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
@@ -35,8 +43,14 @@ const MenuIcon = ({ onClick }) => (
 // Loading 组件
 function Loading() {
   return (
-    <div className="flex items-center justify-center min-h-screen">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+    <div className="flex items-center justify-center min-h-screen bg-gray-50">
+      <div className="relative">
+        <div className="w-12 h-12 border-4 border-blue-200 rounded-full animate-spin">
+          <div className="absolute top-0 left-0 w-12 h-12 border-4 border-blue-500 rounded-full animate-spin" 
+            style={{ animationDirection: 'reverse' }}
+          />
+        </div>
+      </div>
     </div>
   );
 }
@@ -60,12 +74,10 @@ function IconGallery() {
     setCurrentCategory(category)
   }, [searchParams])
 
-  // 显示 Toast 的辅助函数
   const showToast = (message) => {
     setToast({ visible: true, message });
   };
 
-  // 隐藏 Toast 的辅助函数
   const hideToast = () => {
     setToast({ visible: false, message: '' });
   };
@@ -82,11 +94,6 @@ function IconGallery() {
         const categoriesData = await categoriesRes.json();
         const metadataData = await metadataRes.json();
         
-        console.log('API Response:', {
-          categories: categoriesData,
-          metadata: metadataData
-        });
-
         setCategories(Array.isArray(categoriesData) ? categoriesData : []);
         setMetadata(metadataData || {});
       } catch (error) {
@@ -148,12 +155,10 @@ function IconGallery() {
     }
   };
 
-  // 切换分类时更新 URL
   const handleCategoryChange = (category) => {
     setCurrentCategory(category)
     setIsMobileMenuOpen(false)
     
-    // 更新 URL
     if (category === 'all') {
       router.push('/')
     } else {
@@ -161,23 +166,17 @@ function IconGallery() {
     }
   }
 
-  // 对分类进行排序
   const sortedCategories = useMemo(() => {
     if (!Array.isArray(categories)) return [];
     
     return [...categories].sort((a, b) => {
       const orderA = metadata[a]?.order || 0;
       const orderB = metadata[b]?.order || 0;
-      
-      // 优先按 order 排序
       if (orderA !== orderB) return orderA - orderB;
-      
-      // 其次按名称排序
       return a.localeCompare(b);
     });
   }, [categories, metadata]);
 
-  // 过滤图标
   const filteredIcons = useMemo(() => {
     if (!Array.isArray(icons)) return [];
     if (!searchTerm) return icons;
@@ -202,7 +201,6 @@ function IconGallery() {
     });
   }, [icons, metadata, searchTerm]);
 
-  // 对图标进行排序
   const sortedAndFilteredIcons = useMemo(() => {
     let result = [...filteredIcons];
 
@@ -219,7 +217,6 @@ function IconGallery() {
     return result;
   }, [filteredIcons, sortDirection]);
 
-  // 切换排序方向
   const toggleSort = () => {
     setSortDirection(current => {
       switch (current) {
@@ -232,7 +229,7 @@ function IconGallery() {
   };
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-screen bg-gray-50">
       {/* 移动端菜单按钮 */}
       <MenuIcon onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} />
 
@@ -246,14 +243,16 @@ function IconGallery() {
 
       {/* 左侧目录 */}
       <aside className={`
-        w-64 bg-gray-50 p-4 border-r fixed h-screen overflow-y-auto z-30
-        transition-transform duration-300 ease-in-out
+        w-64 bg-white p-4 border-r fixed h-screen overflow-y-auto z-30
+        transition-transform duration-300 ease-in-out shadow-lg
         lg:translate-x-0
         ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
       `}>
-        <div className="mb-6">
-          <h1 className="text-xl font-bold">Icon Gallery</h1>
-          <p className="text-sm text-gray-500 mt-2">
+        <div className="mb-6 border-b pb-4">
+          <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent">
+            Icon Gallery
+          </h1>
+          <p className="text-sm text-gray-600 mt-2">
             SVG图标管理与预览工具
           </p>
         </div>
@@ -262,10 +261,12 @@ function IconGallery() {
             暂无图标分类
           </div>
         ) : (
-          <ul className="space-y-2">
+          <ul className="space-y-1.5">
             <li
-              className={`cursor-pointer p-2 rounded ${
-                currentCategory === 'all' ? 'bg-blue-500 text-white' : 'hover:bg-gray-100'
+              className={`cursor-pointer px-3 py-2 rounded-lg transition-all duration-200 ${
+                currentCategory === 'all' 
+                  ? 'bg-blue-500 text-white shadow-md' 
+                  : 'hover:bg-gray-100'
               }`}
               onClick={() => handleCategoryChange('all')}
             >
@@ -274,14 +275,18 @@ function IconGallery() {
             {sortedCategories.map(category => (
               <li
                 key={category}
-                className={`cursor-pointer p-2 rounded ${
-                  currentCategory === category ? 'bg-blue-500 text-white' : 'hover:bg-gray-100'
+                className={`cursor-pointer px-3 py-2 rounded-lg transition-all duration-200 ${
+                  currentCategory === category 
+                    ? 'bg-blue-500 text-white shadow-md' 
+                    : 'hover:bg-gray-100'
                 }`}
                 onClick={() => handleCategoryChange(category)}
               >
                 <span>{category}</span>
                 {metadata[category]?.categoryName && (
-                  <span className="text-gray-500 ml-2">
+                  <span className={`ml-2 ${
+                    currentCategory === category ? 'text-blue-100' : 'text-gray-500'
+                  }`}>
                     {metadata[category].categoryName}
                   </span>
                 )}
@@ -294,36 +299,54 @@ function IconGallery() {
       {/* 主内容区 */}
       <main className="flex-1 lg:ml-64">
         {/* 标题和描述 */}
-        <div className="bg-white border-b px-6 py-4">
-          <h2 className="text-lg font-semibold">
+        <div className="bg-white border-b px-6 py-4 shadow-sm">
+          <h2 className="text-xl font-semibold text-gray-800">
             {currentCategory === 'all' 
               ? '所有图标' 
               : metadata[currentCategory]?.categoryName || currentCategory}
           </h2>
           {currentCategory !== 'all' && metadata[currentCategory]?.description && (
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-sm text-gray-600 mt-2">
               {metadata[currentCategory].description}
             </p>
           )}
         </div>
 
-        {/* 搜索栏和排序按钮 */}
-        <div className="sticky top-0 bg-white z-10 p-4 border-b shadow-sm">
-          <div className="flex gap-4">
-            <input
-              type="text"
-              placeholder="搜索图标..."
-              className="flex-1 p-2 border rounded"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
+        {/* 搜索栏和工具栏 */}
+        <div className="sticky top-0 bg-white/80 backdrop-blur-sm z-10 p-4 border-b">
+          <div className="max-w-5xl mx-auto flex gap-4">
+            <div className="relative flex-1">
+              <input
+                type="text"
+                placeholder="搜索图标..."
+                className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+              <svg 
+                className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" 
+                fill="none" 
+                viewBox="0 0 24 24" 
+                stroke="currentColor"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
             <button
               onClick={toggleSort}
-              className={`px-4 py-2 border rounded hover:bg-gray-50 ${
-                sortDirection !== 'none' ? 'bg-gray-100' : ''
-              }`}
+              className={`px-4 py-2 border rounded-lg hover:bg-gray-50 transition-colors
+                ${sortDirection !== 'none' ? 'bg-gray-100' : ''}
+                flex items-center gap-2`}
               title="切换排序方式"
             >
+              <svg 
+                className="w-4 h-4" 
+                fill="none" 
+                viewBox="0 0 24 24" 
+                stroke="currentColor"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9M3 12h6m-6 4h13" />
+              </svg>
               {sortDirection === 'none' && '排序'}
               {sortDirection === 'asc' && 'A → Z'}
               {sortDirection === 'desc' && 'Z → A'}
@@ -332,75 +355,88 @@ function IconGallery() {
         </div>
 
         {/* 图标网格 */}
-        <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {sortedAndFilteredIcons.length === 0 ? (
-            <div className="col-span-full text-center text-gray-500 py-12">
-              {searchTerm ? '没有找到匹配的图标' : '暂无图标'}
-            </div>
-          ) : (
-            sortedAndFilteredIcons.map((icon, index) => {
-              const iconName = icon.name.replace('.svg', '');
-              const categoryMeta = metadata[icon.category] || {};
-              const iconMeta = categoryMeta.icons?.[iconName] || {};
-              
-              return (
-                <div key={index} className="p-4 border rounded hover:shadow-lg">
-                  <div className="flex items-center justify-center mb-4">
-                    <img
-                      src={icon.path}
-                      alt={iconMeta.name || iconName}
-                      className="w-8 h-8"
-                    />
-                  </div>
-                  <div className="mb-3 text-center">
-                    <p className="text-sm font-medium">{iconName}</p>
-                    {iconMeta.name && (
-                      <p className="text-sm text-gray-500">
-                        {iconMeta.name}
-                      </p>
-                    )}
-                    {iconMeta.description && (
-                      <p className="text-xs text-gray-400 mt-1">
-                        {iconMeta.description}
-                      </p>
-                    )}
-                  </div>
-                  <div className="flex justify-center space-x-2">
-                    <button
-                      onClick={() => copyIconCode(icon.path)}
-                      className="px-4 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600"
-                    >
-                      复制
-                    </button>
-                    <button
-                      onClick={() => downloadIcon(icon.path, iconName)}
-                      className="px-4 py-1 text-sm bg-green-500 text-white rounded hover:bg-green-600"
-                    >
-                      下载
-                    </button>
-                  </div>
-                </div>
-              )
-            })
-          )}
-        </div>
-      </main>
+        <div className="p-6 max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {sortedAndFilteredIcons.length === 0 ? (
+              <div className="col-span-full text-center text-gray-500 py-12">
+                {searchTerm ? '没有找到匹配的图标' : '暂无图标'}
+              </div>
+            ) : (
+              sortedAndFilteredIcons.map((icon, index) => {
+                const iconName = icon.name.replace('.svg', '');
+                const categoryMeta = metadata[icon.category] || {};
+                const iconMeta = categoryMeta.icons?.[iconName] || {};
+                
+                return (
+                  <div 
+                    key={index} 
+                    className="p-6 border rounded-xl hover:shadow-lg transition-all duration-200 
+                      bg-white hover:scale-102 group"
+                  >
+                    <div className="flex items-center justify-center mb-4 p-4 bg-gray-50 rounded-lg
+                      group-hover:bg-blue-50 transition-colors">
+                      <img
+                        src={icon.path}
+                        alt={iconMeta.name || iconName}
+                        className="w-10 h-10 transition-transform group-hover:scale-110"
+                      />
+                    </div>
+                   
+                   
+<div className="mb-4 text-center space-y-1">
+  <p className="font-medium text-gray-800">{iconName}</p>
+  {iconMeta.name && (
+    <p className="text-sm text-gray-500">{iconMeta.name}</p>
+  )}
+  {iconMeta.description && (
+    <p className="text-xs text-gray-400">{iconMeta.description}</p>
+  )}
+</div>
+<div className="flex justify-center space-x-3">
+  <button
+    onClick={() => copyIconCode(icon.path)}
+    className="px-4 py-2 text-sm bg-blue-500 text-white rounded-lg
+      hover:bg-blue-600 transition-colors flex items-center gap-1"
+  >
+    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+    </svg>
+    复制
+  </button>
+  <button
+    onClick={() => downloadIcon(icon.path, iconName)}
+    className="px-4 py-2 text-sm bg-green-500 text-white rounded-lg
+      hover:bg-green-600 transition-colors flex items-center gap-1"
+  >
+    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+    </svg>
+    下载
+  </button>
+</div>
+</div>
+)
+})
+)}
+</div>
+</div>
+</main>
 
-      {/* Toast 提示 */}
-      <Toast 
-        message={toast.message}
-        visible={toast.visible}
-        onClose={hideToast}
-      />
-    </div>
-  );
+{/* Toast 提示 */}
+<Toast 
+message={toast.message}
+visible={toast.visible}
+onClose={hideToast}
+/>
+</div>
+);
 }
 
 // 导出的主组件
 export default function Home() {
-  return (
-    <Suspense fallback={<Loading />}>
-      <IconGallery />
-    </Suspense>
-  )
+return (
+<Suspense fallback={<Loading />}>
+<IconGallery />
+</Suspense>
+)
 }
