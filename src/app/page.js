@@ -202,7 +202,7 @@ function IconGallery() {
   const [toast, setToast] = useState({ visible: false, message: '' })
   const [selectedIcon, setSelectedIcon] = useState(null)
   const [sortDirection, setSortDirection] = useState('asc')
-  const [menuOpen, setMenuOpen] = useState(false) // 新增移动端菜单状态
+  const [menuOpen, setMenuOpen] = useState(false)
 
   useEffect(() => {
     const category = searchParams.get('category') || 'all'
@@ -293,7 +293,7 @@ function IconGallery() {
     } else {
       router.push(`?category=${category}`)
     }
-    setMenuOpen(false) // 选择分类后关闭移动端菜单
+    setMenuOpen(false)
   }
 
   const toggleSort = () => {
@@ -361,7 +361,7 @@ function IconGallery() {
   }, [icons, sortedCategories, metadata, searchTerm, sortDirection]);
 
   return (
-    <div className="min-h-screen bg-neutral-50">
+    <div className="min-h-screen bg-neutral-50 flex">
       {/* 移动端菜单按钮 */}
       <button 
         className="fixed top-4 left-4 p-2 rounded-lg bg-white shadow-md md:hidden z-40"
@@ -374,9 +374,9 @@ function IconGallery() {
       </button>
 
       {/* 左侧导航栏 */}
-      <aside className={`w-64 bg-white fixed h-screen overflow-y-auto border-r shadow-sm
-        transform transition-transform duration-300 ease-in-out
-        md:translate-x-0 md:relative z-30
+      <aside className={`w-64 bg-white fixed md:sticky top-0 h-screen overflow-y-auto 
+        border-r shadow-sm transform transition-transform duration-300 ease-in-out
+        md:transform-none md:block flex-shrink-0 z-30
         ${menuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}>
         <div className="p-6 border-b">
           <h1 className="text-xl font-bold text-neutral-800">
@@ -430,8 +430,9 @@ function IconGallery() {
           onClick={() => setMenuOpen(false)}
         />
       )}
-{/* 主内容区 */}
-<main className="w-full md:ml-64 transition-all duration-300">
+
+      {/* 主内容区 */}
+      <main className="flex-1 min-w-0">
         {/* 搜索栏和排序按钮 */}
         <div className="sticky top-0 bg-white/90 backdrop-blur-sm z-20 border-b shadow-sm">
           <div className="px-4 md:px-6 py-4">
@@ -463,9 +464,7 @@ function IconGallery() {
                     onClick={() => setSearchTerm('')}
                   >
                     <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" 
-                        d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" 
-                        clipRule="evenodd" />
+                      <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
                     </svg>
                   </button>
                 )}
@@ -581,7 +580,7 @@ export default function Home() {
   )
 }
 
-// 添加以下CSS到你的全局样式文件中
+// 添加到全局样式文件
 /*
 @keyframes fadeInUp {
   from {
