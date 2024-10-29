@@ -64,8 +64,15 @@ const IconModal = ({ icon, metadata, onClose, onCopy, onDownload }) => {
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-end justify-center">
-      <div className="bg-white w-full max-w-3xl rounded-t-xl p-6">
+    <div 
+      className="fixed inset-0 z-50 flex items-end justify-center"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          onClose();
+        }
+      }}
+    >
+      <div className="bg-white w-full max-w-3xl rounded-t-xl p-6 border-t border-x shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
         <div className="flex justify-between items-start mb-6">
           <div className="flex items-center space-x-4">
             <img src={icon.path} alt={iconMeta.name || iconName} className="w-12 h-12" />
@@ -155,6 +162,7 @@ function Loading() {
     </div>
   );
 }
+
 // 主要内容组件
 function IconGallery() {
   const router = useRouter()
@@ -349,6 +357,18 @@ function IconGallery() {
         </div>
         <nav className="p-4">
           <ul className="space-y-1">
+            <li>
+              <button
+                className={`w-full px-3 py-2 text-left rounded-lg transition-colors ${
+                  currentCategory === 'all' 
+                    ? 'bg-blue-50 text-blue-600' 
+                    : 'hover:bg-gray-50'
+                }`}
+                onClick={() => handleCategoryChange('all')}
+              >
+                <span className="block font-medium">全部分类</span>
+              </button>
+            </li>
             {sortedCategories.map(category => (
               <li key={category}>
                 <button
@@ -419,47 +439,56 @@ function IconGallery() {
         </div>
 
         {/* 图标组展示 */}
-        {groupedIcons.map(group => group.icons.length > 0 && (
-          <div key={group.category} className="mb-12">
-            <div className="px-6 mb-4">
-              <h2 className="text-xl font-semibold text-gray-800">
-                {group.categoryName || group.category}
-              </h2>
-            </div>
-            <div className="px-6 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-6">
-              {group.icons.map((icon, index) => {
-                const iconName = icon.name.replace('.svg', '')
-                const iconMeta = metadata[group.category]?.icons?.[iconName] || {}
-                
-                return (
-                  <div
-                    key={index}
-                    className={`aspect-square p-4 rounded-lg cursor-pointer transition-colors
-                      ${selectedIcon === icon ? 'bg-white' : 'hover:bg-gray-100'}
-                    `}
-                    onClick={() => setSelectedIcon(icon)}
-                  >
-                    <div className="flex flex-col items-center text-center space-y-2">
-                      <img
-                        src={icon.path}
-                        alt={iconMeta.name || iconName}
-                        className="w-8 h-8"
-                      />
-                      <p className="text-sm font-medium truncate w-full">
-                        {iconName}
-                      </p>
-                      {iconMeta.name && (
-                        <p className="text-xs text-gray-500 truncate w-full">
-                          {iconMeta.name}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
+        {groupedIcons.every(group => group.icons.length === 0) ? (
+          <div className="px-6 py-12 text-center text-gray-500">
+            无结果，请切换全部分类或更换关键词
           </div>
-        ))}
+        ) : (
+          groupedIcons.map(group => group.icons.length > 0 && (
+            <div key={group.category} className="mb-12">
+              <div className="px-6 mb-4">
+                <h2 className="text-xl font-semibold text-gray-800">
+                  {group.categoryName || group.category}
+                </h2>
+              </div>
+              <div className="px-6 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-6">
+                {group.icons.map((icon, index) => {
+                  const iconName = icon.name.replace('.svg', '')
+                  const iconMeta = metadata[group.category]?.icons?.[iconName] || {}
+                  
+                  return (
+                    <div
+                      key={index}
+                      className={`aspect-square p-4 rounded-lg cursor-pointer transition-colors
+                        ${selectedIcon === icon ? 'bg-white' : 'hover:bg-gray-100'}
+                      `}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedIcon(icon);
+                      }}
+                    >
+                      <div className="flex flex-col items-center text-center space-y-2">
+                        <img
+                          src={icon.path}
+                          alt={iconMeta.name || iconName}
+                          className="w-8 h-8"
+                        />
+                        <p className="text-sm font-medium truncate w-full">
+                          {iconName}
+                        </p>
+                        {iconMeta.name && (
+                          <p className="text-xs text-gray-500 truncate w-full">
+                            {iconMeta.name}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          ))
+        )}
       </main>
 
       {/* 图标详情弹窗 */}
