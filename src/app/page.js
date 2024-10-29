@@ -67,6 +67,14 @@ const IconModal = ({ icon, metadata, onClose, onCopy, onDownload }) => {
     await navigator.clipboard.writeText(code);
   }
 
+  const selectCode = (e) => {
+    const range = document.createRange();
+    range.selectNodeContents(e.target);
+    const selection = window.getSelection();
+    selection.removeAllRanges();
+    selection.addRange(range);
+  };
+
   return (
     <div className="fixed inset-x-0 bottom-5 z-50 flex justify-center">
       <div className="bg-white w-full max-w-3xl rounded-xl p-6 border shadow-lg">
@@ -129,7 +137,7 @@ const IconModal = ({ icon, metadata, onClose, onCopy, onDownload }) => {
               </div>
               <CopyButton onClick={copyCode} />
             </div>
-            <div className="bg-gray-50 rounded-lg p-4 h-[200px] overflow-y-auto">
+            <div className="bg-gray-50 rounded-lg p-4 h-[200px]">
               {isLoading ? (
                 <div className="animate-pulse space-y-2">
                   <div className="h-4 bg-gray-200 rounded w-3/4"></div>
@@ -137,9 +145,14 @@ const IconModal = ({ icon, metadata, onClose, onCopy, onDownload }) => {
                   <div className="h-4 bg-gray-200 rounded w-2/3"></div>
                 </div>
               ) : (
-                <code className="font-mono text-sm whitespace-pre-wrap break-all" style={{ width: '600px', display: 'inline-block' }}>
-                  {activeTab === 'svg' ? svgCode : `<${iconName} :size="32" />`}
-                </code>
+                <div className="h-full overflow-y-auto">
+                  <code 
+                    className="font-mono text-sm whitespace-pre break-all block min-w-0 w-full cursor-pointer"
+                    onClick={selectCode}
+                  >
+                    {activeTab === 'svg' ? svgCode : `<${iconName} :size="32" />`}
+                  </code>
+                </div>
               )}
             </div>
           </div>
