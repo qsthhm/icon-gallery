@@ -1,22 +1,25 @@
 // src/app/layout.js
+import Script from 'next/script'
 import './globals.css'
 
 export const metadata = {
- title: 'Icon Gallery - SVG图标管理与预览工具',
- description: '一个简洁易用的 SVG 图标管理和预览工具，支持分类浏览、搜索、复制和下载。',
- keywords: 'SVG, 图标, Icon, Gallery, 图标管理, 图标预览',
- authors: [{ name: 'Your Name' }],
- openGraph: {
-   title: 'Icon Gallery - SVG图标管理与预览工具',
-   description: '一个简洁易用的 SVG 图标管理和预览工具，支持分类浏览、搜索、复制和下载。',
-   type: 'website',
-   locale: 'zh_CN',
- },
- twitter: {
-   card: 'summary_large_image',
-   title: 'Icon Gallery - SVG图标管理与预览工具',
-   description: '一个简洁易用的 SVG 图标管理和预览工具，支持分类浏览、搜索、复制和下载。',
- }
+  title: 'Icon Gallery - SVG图标管理与预览工具',
+  description: '一个简洁易用的 SVG 图标管理和预览工具，支持分类浏览、搜索、复制和下载。',
+  keywords: 'SVG, 图标, Icon, Gallery, 图标管理, 图标预览',
+  authors: [{ name: 'Your Name' }],
+  metadataBase: new URL('https://icon.qieyan.com'),
+  openGraph: {
+    title: 'Icon Gallery - SVG图标管理与预览工具',
+    description: '一个简洁易用的 SVG 图标管理和预览工具，支持分类浏览、搜索、复制和下载。',
+    type: 'website',
+    locale: 'zh_CN',
+    url: 'https://icon-gallery-two.vercel.app',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Icon Gallery - SVG图标管理与预览工具',
+    description: '一个简洁易用的 SVG 图标管理和预览工具，支持分类浏览、搜索、复制和下载。',
+  }
 }
 
 export default function RootLayout({ children }) {
