@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect, useMemo } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 
 // Toast 组件
 const Toast = ({ message, visible, onClose }) => {
@@ -19,7 +20,21 @@ const Toast = ({ message, visible, onClose }) => {
  );
 };
 
+// 菜单图标组件
+const MenuIcon = ({ onClick }) => (
+ <button
+   onClick={onClick}
+   className="lg:hidden fixed top-4 left-4 z-30 p-2 rounded-lg bg-gray-100 hover:bg-gray-200"
+ >
+   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+   </svg>
+ </button>
+);
+
 export default function Home() {
+ const router = useRouter()
+ const searchParams = useSearchParams()
  const [categories, setCategories] = useState([])
  const [currentCategory, setCurrentCategory] = useState('all')
  const [icons, setIcons] = useState([])
@@ -27,6 +42,13 @@ export default function Home() {
  const [metadata, setMetadata] = useState({})
  const [toast, setToast] = useState({ visible: false, message: '' })
  const [sortDirection, setSortDirection] = useState('asc')
+ const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+
+ // 从 URL 读取当前分类
+ useEffect(() => {
+   const category = searchParams.get('category') || 'all'
+   setCurrentCategory(category)
+ }, [searchParams])
 
  // 显示 Toast 的辅助函数
  const showToast = (message) => {
@@ -116,6 +138,19 @@ export default function Home() {
    }
  };
 
+ // 切换分类时更新 URL
+ const handleCategoryChange = (category) => {
+   setCurrentCategory(category)
+   setMobileMenuOpen(false) // 选择分类后关闭移动端菜单
+   
+   // 更新 URL
+   if (category === 'all') {
+     router.push('/')
+   } else {
+     router.push(`?category=${category}`)
+   }
+ }
+
  // 对分类进行排序
  const sortedCategories = useMemo(() => {
    if (!Array.isArray(categories)) return [];
@@ -188,12 +223,28 @@ export default function Home() {
 
  return (
    <div className="flex min-h-screen">
+     {/* 移动端菜单按钮 */}
+     <MenuIcon onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} />
+
+     {/* 移动端遮罩层 */}
+     {isMobileMenuOpen && (
+       <div 
+         className="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-20"
+         onClick={() => setIsMobileMenuOpen(false)}
+       />
+     )}
+
      {/* 左侧目录 */}
-     <aside className="w-64 bg-gray-50 p-4 border-r fixed h-screen overflow-y-auto">
+     <aside className={`
+       w-64 bg-gray-50 p-4 border-r fixed h-screen overflow-y-auto z-30
+       transition-transform duration-300 ease-in-out
+       lg:translate-x-0
+       ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+     `}>
        <div className="mb-6">
          <h1 className="text-xl font-bold">Icon Gallery</h1>
          <p className="text-sm text-gray-500 mt-2">
-           用AI写的图标代码工具
+           SVG图标管理与预览工具
          </p>
        </div>
        {categories.length === 0 ? (
@@ -206,7 +257,7 @@ export default function Home() {
              className={`cursor-pointer p-2 rounded ${
                currentCategory === 'all' ? 'bg-blue-500 text-white' : 'hover:bg-gray-100'
              }`}
-             onClick={() => setCurrentCategory('all')}
+             onClick={() => handleCategoryChange('all')}
            >
              全部图标
            </li>
@@ -216,7 +267,7 @@ export default function Home() {
                className={`cursor-pointer p-2 rounded ${
                  currentCategory === category ? 'bg-blue-500 text-white' : 'hover:bg-gray-100'
                }`}
-               onClick={() => setCurrentCategory(category)}
+               onClick={() => handleCategoryChange(category)}
              >
                <span>{category}</span>
                {metadata[category]?.categoryName && (
@@ -231,7 +282,7 @@ export default function Home() {
      </aside>
 
      {/* 主内容区 */}
-     <main className="flex-1 ml-64">
+     <main className="flex-1 lg:ml-64">
        {/* 标题和描述 */}
        <div className="bg-white border-b px-6 py-4">
          <h2 className="text-lg font-semibold">
@@ -251,7 +302,7 @@ export default function Home() {
          <div className="flex gap-4">
            <input
              type="text"
-             placeholder="搜索图标英文或中文名称..."
+             placeholder="搜索图标..."
              className="flex-1 p-2 border rounded"
              value={searchTerm}
              onChange={(e) => setSearchTerm(e.target.value)}
@@ -263,7 +314,7 @@ export default function Home() {
              }`}
              title="切换排序方式"
            >
-             {sortDirection === 'none' && '无排序'}
+             {sortDirection === 'none' && '排序'}
              {sortDirection === 'asc' && 'A → Z'}
              {sortDirection === 'desc' && 'Z → A'}
            </button>
@@ -271,7 +322,7 @@ export default function Home() {
        </div>
 
        {/* 图标网格 */}
-       <div className="p-6 grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 gap-4">
+       <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
          {sortedAndFilteredIcons.length === 0 ? (
            <div className="col-span-full text-center text-gray-500 py-12">
              {searchTerm ? '没有找到匹配的图标' : '暂无图标'}
